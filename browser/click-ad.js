@@ -9,8 +9,10 @@ new Promise(async (resolve) => {
 
     await sleep(rand(1000, 5000));
     window.scrollTo(0, document.body.scrollHeight);
+    console.log('滚动到底部');
     await sleep(rand(1000, 5000));
     window.scrollTo(0, 0);
+    console.log('滚动到顶部');
     await sleep(rand(1000, 5000));
     const timer = setInterval(async () => {
         const iframe = document.querySelector('#aswift_0_anchor iframe');
@@ -26,6 +28,7 @@ new Promise(async (resolve) => {
                     if (url) {
                         clearInterval(timer);
                         await sleep(rand(1000, 5000));
+                        console.log('点击广告', url);
                         window.location.href = url;
                         resolve();
                     }

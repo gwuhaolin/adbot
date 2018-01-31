@@ -24,6 +24,7 @@ async function clickAd(url, proxy) {
             }, 100000);
 
             chromePoll = await ChromePool.new({
+                protocols: ['Page', 'Runtime', 'Log'],
                 chromeRunnerOptions: {
                     chromeFlags: [
                         '--disable-web-security',
@@ -32,9 +33,13 @@ async function clickAd(url, proxy) {
                 }
             });
             const {protocol} = await chromePoll.require();
-            const {Page, Runtime} = protocol;
+            const {Page, Runtime, Log} = protocol;
             await Page.navigate({
                 url,
+            });
+            // 输出浏览器日志
+            Log.entryAdded((entry) => {
+                console.log(JSON.stringify(entry));
             });
             await Runtime.evaluate({
                 awaitPromise: true,
@@ -64,7 +69,7 @@ async function clickAd(url, proxy) {
 (async () => {
     // const p = await getProxy();
     const url = sites[rand(0, sites.length)];
-    console.log(url);
+    console.log('访问广告承载网址', url);
     await clickAd(url, 'socks5://localhost:7448');
     console.log('done');
 })();
