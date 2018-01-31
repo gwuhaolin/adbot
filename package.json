@@ -1,0 +1,11 @@
+{
+  "name": "adbot",
+  "version": "0.0.1",
+  "scripts": {
+    "test": "node ./main.js"
+  },
+  "dependencies": {
+    "axios": "^0.17.1",
+    "chrome-pool": "^1.2.1"
+  }
+}
