@@ -9,9 +9,9 @@ function rand(min, max) {
 }
 
 async function getProxy() {
-    const res = await axios.get('http://pubproxy.com/api/proxy?google=true&last_check=60&type=socks5&format=txt');
+    const res = await axios.get('http://pubproxy.com/api/proxy?google=true&last_check=10&type=http&format=txt');
     const ipPort = res.data;
-    return `socks5://${ipPort}`;
+    return `http://${ipPort}`;
 }
 
 async function clickAd(url, proxy) {
@@ -67,10 +67,10 @@ async function clickAd(url, proxy) {
 }
 
 (async () => {
-    // const p = await getProxy();
-    // console.log('获取代理', p);
+    const p = await getProxy();
+    console.log('获取代理', p);
     const url = sites[rand(0, sites.length)];
     console.log('访问广告承载网址', url);
-    await clickAd(url, /*p*/);
+    await clickAd(url, p);
     console.log('done');
 })();
