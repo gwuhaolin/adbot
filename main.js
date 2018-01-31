@@ -20,7 +20,7 @@ async function clickAd(url, proxy) {
         await new Promise(async (resolve, reject) => {
             // 最长执行时间
             setTimeout(() => {
-                reject('TIMEOUT');
+                reject('TIMEOUT', '100S内没执行完');
             }, 100000);
 
             chromePoll = await ChromePool.new({
