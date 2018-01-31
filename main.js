@@ -71,6 +71,6 @@ async function clickAd(url, proxy) {
     console.log('获取代理', p);
     const url = sites[rand(0, sites.length)];
     console.log('访问广告承载网址', url);
-    await clickAd(url, 'socks5://localhost:7448');
+    await clickAd(url);
     console.log('done');
 })();
