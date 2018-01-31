@@ -67,10 +67,10 @@ async function clickAd(url, proxy) {
 }
 
 (async () => {
-    const p = await getProxy();
-    console.log('获取代理', p);
+    // const p = await getProxy();
+    // console.log('获取代理', p);
     const url = sites[rand(0, sites.length)];
     console.log('访问广告承载网址', url);
-    await clickAd(url, p);
+    await clickAd(url, /*p*/);
     console.log('done');
 })();
