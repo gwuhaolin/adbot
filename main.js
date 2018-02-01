@@ -71,6 +71,6 @@ async function clickAd(url, proxy) {
     // console.log('获取代理', p);
     const url = sites[rand(0, sites.length)];
     console.log('访问广告承载网址', url);
-    await clickAd(url, /*p*/);
+    await clickAd(url, '138.68.53.116:7448');
     console.log('done');
 })();
