@@ -61,7 +61,7 @@ async function getAd(url, proxy) {
     await new Promise(async (resolve, reject) => {
         // 最长执行时间
         setTimeout(() => {
-            reject('TIMEOUT 100S内没执行完');
+            reject('TIMEOUT 200S内没执行完');
         }, 200000);
 
         chromePoll = await ChromePool.new({
@@ -122,10 +122,6 @@ async function getAd(url, proxy) {
     try {
         // const p = await getProxy();
         // console.log('获取代理', p);
-        let res = await axios.get('https://jd.com');
-        console.log(res.data);
-        res = await axios.get('https://google.com');
-        console.log(res.data);
         const url = sites[rand(0, sites.length)];
         console.log('访问广告承载网址', url);
         await getAd(url, /*'socks5://138.68.53.116:7448'*/);
