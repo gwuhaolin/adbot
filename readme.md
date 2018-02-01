@@ -1,0 +1,2 @@
+[![Build Status](https://img.shields.io/travis/gwuhaolin/adbot.svg?style=flat-square)](https://travis-ci.org/gwuhaolin/adbot)
+[![Build Status](https://img.shields.io/appveyor/ci/gwuhaolin/adbot.svg?style=flat-square)](https://ci.appveyor.com/project/gwuhaolin/adbot)
