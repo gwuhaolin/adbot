@@ -125,9 +125,7 @@ async function getAd(url, proxy) {
         const url = sites[rand(0, sites.length)];
         console.log('访问广告承载网址', url);
         await getAd(url, /*'socks5://138.68.53.116:7448'*/);
-        process.exit(0);
     } catch (err) {
         console.error(err);
-        process.exit(1);
     }
 })();
