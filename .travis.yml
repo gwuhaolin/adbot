@@ -7,4 +7,5 @@ node_js:
 addons:
   chrome: stable
 after_success:
-  - sh ./push.sh
+  - chmod +x ./push.sh
+  - ./push.sh
