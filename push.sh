@@ -6,6 +6,7 @@ setup_git() {
 }
 
 commit_website_files() {
+  git checkout master
   echo "$(date)" > readme.md
   git add readme.md
   git commit --message "update"
