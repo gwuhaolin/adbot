@@ -127,5 +127,7 @@ async function getAd(url, proxy) {
         await getAd(url, /*'socks5://138.68.53.116:7448'*/);
     } catch (err) {
         console.error(err);
+    } finally {
+        process.exit(0);
     }
 })();
