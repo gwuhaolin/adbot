@@ -30,26 +30,31 @@ async function visitAd(ref, adUrl) {
         }
         return new Promise(async (resolve, reject) => {
             const {protocol} = await chromePoll.require();
-            const {Page, Runtime, Target} = protocol;
-            const {targetId} = await Target.createTarget({
+            const {Page, Target, Runtime} = protocol;
+            let {targetId} = await Target.createTarget({
                 url: '',
             });
+            targetId = targetId.substr(1, targetId.length - 1);
             await Page.navigate({
                 url: adUrl,
-                frameId: targetId.substr(1, targetId.length - 1),
+                frameId: targetId,
                 referrer: ref,
             });
-            console.log('执行点击广告');
+            console.log(`执行点击广告 ${adUrl}`);
             Page.domContentEventFired(async () => {
                 console.log(`广告页 ${adUrl} 加载完毕`);
                 resolve();
-                await Runtime.evaluate({
-                    awaitPromise: true,
-                    returnByValue: true,
-                    expression: fs.readFileSync(path.resolve(__dirname, 'browser', 'play.js'), {
-                        encoding: 'utf8'
-                    })
-                });
+                try {
+                    await Runtime.evaluate({
+                        awaitPromise: true,
+                        returnByValue: true,
+                        expression: fs.readFileSync(path.resolve(__dirname, 'browser', 'play.js'), {
+                            encoding: 'utf8'
+                        })
+                    });
+                } catch (e) {
+                    console.error(e);
+                }
             });
         });
     }
