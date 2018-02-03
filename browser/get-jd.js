@@ -1,16 +1,17 @@
 new Promise(async (resolve) => {
+    // 提取京东广告地址
     const timer = setInterval(async () => {
-        // 隐藏JD广告
-        const iframe = document.querySelector('iframe[src^="//u-x.jd.com/"]');
-        if (iframe) {
+        try {
+            const iframe = document.querySelector('iframe[src^="//u-x.jd.com/"]');
             let innerDoc = (iframe.contentDocument) ? iframe.contentDocument : iframe.contentWindow.document;
             const ad = innerDoc.querySelector('a[href^="//union-click.jd.com/jdc?"]');
             const url = ad.getAttribute('href');
-            console.log(url);
             if (url) {
                 clearInterval(timer);
-                resolve(url);
+                resolve(JSON.stringify(url));
             }
+        } catch (e) {
+            console.error(e);
         }
     }, 100)
 });

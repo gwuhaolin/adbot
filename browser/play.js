@@ -1,4 +1,5 @@
 new Promise(async (resolve) => {
+    // 进入广告页乱点
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms))
     }

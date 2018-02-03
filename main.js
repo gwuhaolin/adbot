@@ -22,33 +22,37 @@ async function getProxy() {
  * @param adUrl
  */
 async function visitAd(ref, adUrl) {
-    if (adUrl.startsWith('//')) {
-        adUrl = 'http:' + adUrl;
-    }
-    return new Promise(async (resolve, reject) => {
-        const {protocol} = await chromePoll.require();
-        const {Page, Runtime, Target} = protocol;
-        const {targetId} = await Target.createTarget({
-            url: '',
-        });
-        await Page.navigate({
-            url: adUrl,
-            frameId: targetId.substr(1, targetId.length - 1),
-            referrer: ref,
-        });
-        console.log('执行点击广告');
-        Page.domContentEventFired(async () => {
-            console.log(`广告页 ${adUrl} 加载完毕`);
-            resolve();
-            await Runtime.evaluate({
-                awaitPromise: true,
-                returnByValue: true,
-                expression: fs.readFileSync(path.resolve(__dirname, 'browser', 'play.js'), {
-                    encoding: 'utf8'
-                })
+    if (Array.isArray(adUrl)) {
+        return Promise.all(adUrl.map((url) => visitAd(ref, url)));
+    } else if (typeof adUrl === "string") {
+        if (adUrl.startsWith('//')) {
+            adUrl = 'http:' + adUrl;
+        }
+        return new Promise(async (resolve, reject) => {
+            const {protocol} = await chromePoll.require();
+            const {Page, Runtime, Target} = protocol;
+            const {targetId} = await Target.createTarget({
+                url: '',
+            });
+            await Page.navigate({
+                url: adUrl,
+                frameId: targetId.substr(1, targetId.length - 1),
+                referrer: ref,
+            });
+            console.log('执行点击广告');
+            Page.domContentEventFired(async () => {
+                console.log(`广告页 ${adUrl} 加载完毕`);
+                resolve();
+                await Runtime.evaluate({
+                    awaitPromise: true,
+                    returnByValue: true,
+                    expression: fs.readFileSync(path.resolve(__dirname, 'browser', 'play.js'), {
+                        encoding: 'utf8'
+                    })
+                });
             });
         });
-    });
+    }
 }
 
 /**
@@ -61,8 +65,8 @@ async function getAd(url, proxy) {
     await new Promise(async (resolve, reject) => {
         // 最长执行时间
         setTimeout(() => {
-            reject('TIMEOUT 200S内没执行完');
-        }, 200000);
+            reject('TIMEOUT 1000S内没执行完');
+        }, 1000000);
 
         chromePoll = await ChromePool.new({
             protocols: ['Page', 'Runtime', 'Log'],
@@ -94,7 +98,7 @@ async function getAd(url, proxy) {
                         encoding: 'utf8'
                     })
                 });
-                const adUrl = res.result.value;
+                const adUrl = JSON.parse(res.result.value);
                 console.log(`成功获取到 ${'google'} 的广告地址 ${adUrl}`);
                 await visitAd(url, adUrl);
                 resolve();
@@ -107,7 +111,7 @@ async function getAd(url, proxy) {
                         encoding: 'utf8'
                     })
                 });
-                const adUrl = res.result.value;
+                const adUrl = JSON.parse(res.result.value);
                 console.log(`成功获取到 ${'jd'} 的广告地址 ${adUrl}`);
                 await visitAd(url, adUrl);
                 resolve();
@@ -124,7 +128,7 @@ async function getAd(url, proxy) {
         // console.log('获取代理', p);
         const url = sites[rand(0, sites.length)];
         console.log('访问广告承载网址', url);
-        await getAd(url, /*'socks5://138.68.53.116:7448'*/);
+        await getAd(url);
     } catch (err) {
         console.error(err);
     } finally {
