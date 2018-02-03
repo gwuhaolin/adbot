@@ -29,15 +29,11 @@ async function visitAd(ref, adUrl) {
             adUrl = 'http:' + adUrl;
         }
         return new Promise(async (resolve, reject) => {
+            // 打开一个tab
             const {protocol} = await chromePoll.require();
-            const {Page, Target, Runtime} = protocol;
-            let {targetId} = await Target.createTarget({
-                url: '',
-            });
-            targetId = targetId.substr(1, targetId.length - 1);
+            const {Page, Runtime} = protocol;
             await Page.navigate({
                 url: adUrl,
-                frameId: targetId,
                 referrer: ref,
             });
             console.log(`执行点击广告 ${adUrl}`);
@@ -74,7 +70,7 @@ async function getAd(url, proxy) {
         }, 1000000);
 
         chromePoll = await ChromePool.new({
-            protocols: ['Page', 'Runtime', 'Log'],
+            protocols: ['Page', 'Runtime', 'Log', 'Target'],
             chromeRunnerOptions: {
                 chromeFlags: [
                     '--disable-web-security',
