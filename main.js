@@ -3,6 +3,52 @@ const path = require('path');
 const ChromePool = require('chrome-pool');
 const axios = require('axios');
 const sites = require('./site');
+const adConfig = require('./ad');
+
+function extractAdUrlTemplate(config) {
+    return `
+new Promise(async (resolve) => {
+    /**
+     * 递归造成iframe中的所有A标签
+     * @param iframe doc元素
+     * @param prefixList 符合条件的URL的前缀
+     * @returns {*} A标签数组
+     */
+    function allLinkInFrame(iframe, prefixList) {
+        if (iframe) {
+            const innerDoc = (iframe.contentDocument) ? iframe.contentDocument : iframe.contentWindow.document;
+            const urlList = Array.from(innerDoc.querySelectorAll('a')).map(a => a.getAttribute('href')).filter(url => {
+                return prefixList.some(prefix => url && url.startsWith(prefix));
+            });
+            const iframeList = innerDoc.querySelectorAll('iframe');
+            const innerUrlList = [];
+            iframeList.forEach((iframe) => {
+                innerUrlList.push(...allLinkInFrame(iframe, prefixList));
+            });
+            return [...urlList, ...innerUrlList];
+        } else {
+            return [];
+        }
+    }
+
+    // 提取百度广告地址
+    const timer = setInterval(async () => {
+        try {
+            const iframe = document.querySelector(${JSON.stringify(config.iframeSelector)});
+            const urlList = allLinkInFrame(iframe, ${JSON.stringify(config.prefixList)});
+            if (urlList.length) {
+                clearInterval(timer);
+                resolve(JSON.stringify(urlList));
+            }
+        } catch (e) {
+        }
+    }, 100)
+});`
+}
+
+const playAdJS = fs.readFileSync(path.resolve(__dirname, 'browser', 'play.js'), {
+    encoding: 'utf8'
+});
 
 let chromePoll;
 
@@ -37,19 +83,23 @@ async function visitAd(ref, adUrl) {
                 referrer: ref,
             });
             console.log(`执行点击广告 ${adUrl}`);
+            let hasDone = false;
             Page.domContentEventFired(async () => {
+                if (hasDone) {
+                    return;
+                }
                 console.log(`广告页 ${adUrl} 加载完毕`);
-                resolve();
                 try {
                     await Runtime.evaluate({
                         awaitPromise: true,
                         returnByValue: true,
-                        expression: fs.readFileSync(path.resolve(__dirname, 'browser', 'play.js'), {
-                            encoding: 'utf8'
-                        })
+                        expression: playAdJS,
                     });
+                    resolve();
                 } catch (e) {
-                    console.error(e);
+                    reject(e);
+                } finally {
+                    hasDone = true;
                 }
             });
         });
@@ -70,54 +120,37 @@ async function getAd(url, proxy) {
         }, 200000);
 
         chromePoll = await ChromePool.new({
-            protocols: ['Page', 'Runtime', 'Log', 'Target'],
+            protocols: ['Page', 'Runtime', 'Target'],
             chromeRunnerOptions: {
                 chromeFlags: [
-                    '--disable-web-security',
+                    '--disable-popup-blocking',// 可以弹窗
+                    '--disable-web-security', // 禁止安全检查
                     proxy ? `--proxy-server=${proxy}` : '',
                 ]
             }
         });
         const {protocol} = await chromePoll.require();
-        const {Page, Runtime, Log} = protocol;
+        const {Page, Runtime} = protocol;
         await Page.navigate({
             url,
         });
         Page.domContentEventFired(async () => {
             console.log(`广告承载页 ${url} 加载完毕`);
         });
-        // 输出浏览器日志
-        Log.entryAdded((entry) => {
-            console.log(JSON.stringify(entry));
-        });
-        await Promise.all([
-            new Promise(async (resolve) => {
-                const res = await Runtime.evaluate({
-                    awaitPromise: true,
-                    returnByValue: true,
-                    expression: fs.readFileSync(path.resolve(__dirname, 'browser', 'get-google.js'), {
-                        encoding: 'utf8'
-                    })
+        await Promise.all(
+            Object.keys(adConfig).map((key) => {
+                return new Promise(async (resolve) => {
+                    const res = await Runtime.evaluate({
+                        awaitPromise: true,
+                        returnByValue: true,
+                        expression: extractAdUrlTemplate(adConfig[key])
+                    });
+                    const adUrlList = JSON.parse(res.result.value);
+                    console.log(`成功获取到 ${key} 的广告地址 ${adUrlList}`);
+                    await visitAd(url, adUrlList);
+                    resolve();
                 });
-                const adUrl = JSON.parse(res.result.value);
-                console.log(`成功获取到 ${'google'} 的广告地址 ${adUrl}`);
-                await visitAd(url, adUrl);
-                resolve();
-            }),
-            new Promise(async (resolve) => {
-                const res = await Runtime.evaluate({
-                    awaitPromise: true,
-                    returnByValue: true,
-                    expression: fs.readFileSync(path.resolve(__dirname, 'browser', 'get-jd.js'), {
-                        encoding: 'utf8'
-                    })
-                });
-                const adUrl = JSON.parse(res.result.value);
-                console.log(`成功获取到 ${'jd'} 的广告地址 ${adUrl}`);
-                await visitAd(url, adUrl);
-                resolve();
-            })
-        ]);
+            }));
         resolve();
     });
 }
