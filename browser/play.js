@@ -8,7 +8,13 @@ new Promise(async (resolve) => {
     as = as.filter(a => {
         const url = a.getAttribute('href');
         // 只点击本域名下的链接
-        return url && !/^(.*\/\/|#.*|mailto:|javascript:).+$/.test(url);
+        if (!url) {
+            return false;
+        }
+        if (/^(.*\/\/|#.*|mailto:|javascript:).+$/.test(url) && url.indexOf(location.hostname) < 0) {
+            return false;
+        }
+        return true;
     });
     const len = Math.ceil(as.length / 3);
     const index = rand(len, as.length - len);
