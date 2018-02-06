@@ -4,6 +4,7 @@ const ChromePool = require('chrome-pool');
 const axios = require('axios');
 const sites = require('./site');
 const adConfig = require('./ad');
+process.setMaxListeners(Infinity);
 
 function extractAdUrlTemplate(config) {
     return `
