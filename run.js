@@ -171,17 +171,8 @@ async function getAd(url, proxy) {
     });
 }
 
-
-(async () => {
-    try {
-        // const p = await getProxy();
-        // console.log('获取代理', p);
-        const url = sites[rand(0, sites.length)];
-        console.log('访问广告承载网址', url);
-        await getAd(url);
-    } catch (err) {
-        console.error(err);
-    } finally {
-        process.exit(0);
-    }
-})();
+module.exports = async function () {
+    const url = sites[rand(0, sites.length)];
+    console.log('访问广告承载网址', url);
+    await getAd(url);
+};
