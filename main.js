@@ -3,10 +3,10 @@ const path = require('path');
 const ChromePool = require('chrome-pool');
 const axios = require('axios');
 const sites = require('./site');
-const adConfig = require('./ad');
+const adConfig = require('./adConfig');
 process.setMaxListeners(Infinity);
 
-function extractAdUrlTemplate(config) {
+function extractAdUrlTemplate(iframeSelector, prefixList) {
     return `
 new Promise(async (resolve) => {
     /**
@@ -35,8 +35,8 @@ new Promise(async (resolve) => {
     // 提取百度广告地址
     const timer = setInterval(async () => {
         try {
-            const iframe = document.querySelector(${JSON.stringify(config.iframeSelector)});
-            const urlList = allLinkInFrame(iframe, ${JSON.stringify(config.prefixList)});
+            const iframe = document.querySelector(${JSON.stringify(iframeSelector)});
+            const urlList = allLinkInFrame(iframe, ${JSON.stringify(prefixList)});
             if (urlList.length) {
                 clearInterval(timer);
                 resolve(JSON.stringify(urlList));
@@ -135,18 +135,33 @@ async function getAd(url, proxy) {
         await Page.navigate({
             url,
         });
-        Page.domContentEventFired(async () => {
-            console.log(`广告承载页 ${url} 加载完毕`);
+        await new Promise((resolve) => {
+            let hasRefesh = false;
+            Page.domContentEventFired(async () => {
+                console.log(`广告承载页 ${url} 加载完毕`);
+                if (!hasRefesh) {
+                    await Page.navigate({
+                        url,
+                    });
+                }
+                hasRefesh = true;
+                console.log(`广告承载页 ${url} 刷新完毕`);
+                resolve();
+            });
         });
         await Promise.all(
             Object.keys(adConfig).map((key) => {
                 return new Promise(async (resolve) => {
+                    const {iframeSelector, prefixList, urlReduce} = adConfig[key];
                     const res = await Runtime.evaluate({
                         awaitPromise: true,
                         returnByValue: true,
-                        expression: extractAdUrlTemplate(adConfig[key])
+                        expression: extractAdUrlTemplate(iframeSelector, prefixList)
                     });
-                    const adUrlList = JSON.parse(res.result.value);
+                    let adUrlList = JSON.parse(res.result.value);
+                    if (urlReduce) {
+                        adUrlList = adUrlList.map(urlReduce);
+                    }
                     console.log(`成功获取到 ${key} 的广告地址 ${adUrlList}`);
                     await visitAd(url, adUrlList);
                     resolve();
