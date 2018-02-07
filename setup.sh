@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# for Ubuntu
 # curl -sL https://raw.githubusercontent.com/gwuhaolin/adbot/master/setup.sh | sudo -E bash -
 
 # install nodejs 8
