@@ -1,10 +1,10 @@
+require('events').EventEmitter.prototype._maxListeners = 10000;
 const fs = require('fs');
 const path = require('path');
 const ChromePool = require('chrome-pool');
 const axios = require('axios');
 const sites = require('./site');
 const adConfig = require('./adConfig');
-process.setMaxListeners(Infinity);
 
 function extractAdUrlTemplate(iframeSelector, prefixList) {
     return `
@@ -120,58 +120,62 @@ async function getAd(url, proxy) {
             reject('TIMEOUT 100S内没执行完');
         }, 100000);
 
-        chromePoll = await ChromePool.new({
-            protocols: ['Page', 'Runtime', 'Target'],
-            chromeRunnerOptions: {
-                chromeFlags: [
-                    '--disable-popup-blocking',// 可以弹窗
-                    '--disable-web-security', // 禁止安全检查
-                    proxy ? `--proxy-server=${proxy}` : '',
-                ]
-            }
-        });
-        const {protocol} = await chromePoll.require();
-        const {Page, Runtime} = protocol;
-        await Page.navigate({
-            url,
-        });
-        await new Promise((resolve) => {
-            let refreshCount = 0;
-            Page.domContentEventFired(async () => {
-                console.log(`广告承载页 ${url} 加载完毕`);
-                // 点击率 1% 为正常
-                if (refreshCount < 2) {
-                    setTimeout(async () => {
-                        await Page.navigate({
-                            url,
-                        });
-                        refreshCount++;
-                    }, 100);
-                } else {
-                    console.log(`广告承载页 ${url} 刷新完毕`);
-                    resolve();
+        try {
+            chromePoll = await ChromePool.new({
+                protocols: ['Page', 'Runtime', 'Target'],
+                chromeRunnerOptions: {
+                    chromeFlags: [
+                        '--disable-popup-blocking',// 可以弹窗
+                        '--disable-web-security', // 禁止安全检查
+                        proxy ? `--proxy-server=${proxy}` : '',
+                    ]
                 }
             });
-        });
-        await Promise.all(
-            Object.keys(adConfig).map((key) => {
-                return new Promise(async (resolve) => {
-                    const {iframeSelector, prefixList, urlReduce} = adConfig[key];
-                    const res = await Runtime.evaluate({
-                        awaitPromise: true,
-                        returnByValue: true,
-                        expression: extractAdUrlTemplate(iframeSelector, prefixList)
-                    });
-                    let adUrlList = JSON.parse(res.result.value);
-                    if (urlReduce) {
-                        adUrlList = adUrlList.map(urlReduce);
+            const {protocol} = await chromePoll.require();
+            const {Page, Runtime} = protocol;
+            await Page.navigate({
+                url,
+            });
+            await new Promise((resolve) => {
+                let refreshCount = 0;
+                Page.domContentEventFired(async () => {
+                    console.log(`广告承载页 ${url} 加载完毕`);
+                    // 点击率 1% 为正常
+                    if (refreshCount < 2) {
+                        setTimeout(async () => {
+                            await Page.navigate({
+                                url,
+                            });
+                            refreshCount++;
+                        }, 100);
+                    } else {
+                        console.log(`广告承载页 ${url} 刷新完毕`);
+                        resolve();
                     }
-                    console.log(`成功获取到 ${key} 的广告地址 ${adUrlList}`);
-                    await visitAd(url, adUrlList);
-                    resolve();
                 });
-            }));
-        resolve();
+            });
+            await Promise.all(
+                Object.keys(adConfig).map((key) => {
+                    return new Promise(async (resolve) => {
+                        const {iframeSelector, prefixList, urlReduce} = adConfig[key];
+                        const res = await Runtime.evaluate({
+                            awaitPromise: true,
+                            returnByValue: true,
+                            expression: extractAdUrlTemplate(iframeSelector, prefixList)
+                        });
+                        let adUrlList = JSON.parse(res.result.value);
+                        if (urlReduce) {
+                            adUrlList = adUrlList.map(urlReduce);
+                        }
+                        console.log(`成功获取到 ${key} 的广告地址 ${adUrlList}`);
+                        await visitAd(url, adUrlList);
+                        resolve();
+                    });
+                }));
+            resolve();
+        } catch (e) {
+            reject(e);
+        }
     });
 }
 
@@ -181,6 +185,7 @@ module.exports = async function () {
     try {
         await getAd(url);
     } catch (e) {
+        console.error(e);
         await chromePoll.destroyPoll();
     }
 };
