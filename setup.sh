@@ -14,7 +14,6 @@ sudo apt-get -f -y install
 git clone https://github.com/gwuhaolin/adbot.git
 
 # run
-screen -R adbot
 cd adbot
 npm i
-npm start
+nohup npm start &
