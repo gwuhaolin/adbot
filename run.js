@@ -186,6 +186,7 @@ module.exports = async function () {
         await getAd(url);
     } catch (e) {
         console.error(e);
+    } finally {
         await chromePoll.destroyPoll();
     }
 };
