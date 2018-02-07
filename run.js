@@ -115,12 +115,12 @@ async function visitAd(ref, adUrl) {
  */
 async function getAd(url, proxy) {
     await new Promise(async (resolve, reject) => {
-        // 最长执行时间
-        setTimeout(() => {
-            reject('TIMEOUT 100S内没执行完');
-        }, 100000);
-
         try {
+            // 最长执行时间
+            setTimeout(() => {
+                reject('TIMEOUT 100S内没执行完');
+            }, 100000);
+
             chromePoll = await ChromePool.new({
                 protocols: ['Page', 'Runtime', 'Target'],
                 chromeRunnerOptions: {
