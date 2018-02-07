@@ -117,7 +117,7 @@ async function getAd(url, proxy) {
     await new Promise(async (resolve, reject) => {
         // 最长执行时间
         setTimeout(() => {
-            reject('TIMEOUT 200S内没执行完');
+            reject('TIMEOUT 2000S内没执行完');
         }, 200000);
 
         chromePoll = await ChromePool.new({
@@ -136,17 +136,21 @@ async function getAd(url, proxy) {
             url,
         });
         await new Promise((resolve) => {
-            let hasRefesh = false;
+            let refreshCount = 0;
             Page.domContentEventFired(async () => {
                 console.log(`广告承载页 ${url} 加载完毕`);
-                if (!hasRefesh) {
-                    await Page.navigate({
-                        url,
-                    });
+                // 点击率 1% 为正常
+                if (refreshCount < 100) {
+                    setTimeout(async () => {
+                        await Page.navigate({
+                            url,
+                        });
+                        refreshCount++;
+                    }, 100);
+                } else {
+                    console.log(`广告承载页 ${url} 刷新完毕`);
+                    resolve();
                 }
-                hasRefesh = true;
-                console.log(`广告承载页 ${url} 刷新完毕`);
-                resolve();
             });
         });
         await Promise.all(
