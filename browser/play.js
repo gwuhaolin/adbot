@@ -4,21 +4,40 @@ new Promise(async (resolve) => {
         return Math.floor(Math.random() * max) + min;
     }
 
-    let as = Array.from(document.querySelectorAll('a') || []);
-    as = as.filter(a => {
+    const host = location.host;
+    let aList = [];
+    let targetIndex = null;
+
+    if (host.indexOf('www.baidu.com') >= 0) {
+        // 百度点击第一个链接，因为这是个广告
+        aList = document.querySelectorAll(`#content_left h3[class^="t "] a`);
+        targetIndex = 0;
+    } else {
+        aList = document.querySelectorAll('a');
+    }
+
+    aList = Array.from(aList).filter(a => {
         const url = a.getAttribute('href');
-        // 只点击本域名下的链接
         if (!url) {
             return false;
         }
-        if (/^(.*\/\/|#.*|mailto:|javascript:).+$/.test(url) && url.indexOf(location.hostname) < 0) {
+        if (/^(#.*|mailto:|javascript:).+$/.test(url)) {
+            return false;
+        }
+        // 只点击本域名下的链接
+        if (/^(.*\/\/).+$/.test(url) && url.indexOf(location.hostname) < 0) {
             return false;
         }
         return true;
     });
-    const len = Math.ceil(as.length / 3);
-    const index = rand(len, as.length - len);
+
+    // 默认随机点击中间的
+    if (targetIndex == null) {
+        const len = Math.ceil(aList.length / 3);
+        targetIndex = rand(len, aList.length - len);
+    }
+
     // 随机触发点击
-    as[index].click();
+    aList[targetIndex].click();
     resolve();
 });

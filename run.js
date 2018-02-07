@@ -32,7 +32,7 @@ new Promise(async (resolve) => {
         }
     }
 
-    // 提取百度广告地址
+    // 提取广告地址
     const timer = setInterval(async () => {
         try {
             const iframe = document.querySelector(${JSON.stringify(iframeSelector)});
@@ -43,7 +43,7 @@ new Promise(async (resolve) => {
             }
         } catch (e) {
         }
-    }, 100)
+    }, 10)
 });`
 }
 
@@ -117,8 +117,8 @@ async function getAd(url, proxy) {
     await new Promise(async (resolve, reject) => {
         // 最长执行时间
         setTimeout(() => {
-            reject('TIMEOUT 2000S内没执行完');
-        }, 200000);
+            reject('TIMEOUT 100S内没执行完');
+        }, 100000);
 
         chromePoll = await ChromePool.new({
             protocols: ['Page', 'Runtime', 'Target'],
@@ -140,7 +140,7 @@ async function getAd(url, proxy) {
             Page.domContentEventFired(async () => {
                 console.log(`广告承载页 ${url} 加载完毕`);
                 // 点击率 1% 为正常
-                if (refreshCount < 100) {
+                if (refreshCount < 2) {
                     setTimeout(async () => {
                         await Page.navigate({
                             url,
@@ -178,5 +178,9 @@ async function getAd(url, proxy) {
 module.exports = async function () {
     const url = sites[rand(0, sites.length)];
     console.log('访问广告承载网址', url);
-    await getAd(url);
+    try {
+        await getAd(url);
+    } catch (e) {
+        await chromePoll.destroyPoll();
+    }
 };
