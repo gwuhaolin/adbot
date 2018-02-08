@@ -140,13 +140,13 @@ async function getAd(url, proxy) {
                 let refreshCount = 0;
                 Page.domContentEventFired(async () => {
                     console.log(`广告承载页 ${url} 加载完毕`);
+                    refreshCount++;
                     // 点击率 1% 为正常
                     if (refreshCount < 2) {
                         setTimeout(async () => {
                             await Page.navigate({
                                 url,
                             });
-                            refreshCount++;
                         }, 100);
                     } else {
                         console.log(`广告承载页 ${url} 刷新完毕`);
