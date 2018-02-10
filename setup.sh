@@ -12,6 +12,7 @@ sudo dpkg -i google-chrome-stable_current_amd64.deb
 sudo apt-get -f -y install
 
 # get source
+rm -rf adbot
 git clone https://github.com/gwuhaolin/adbot.git
 
 # run

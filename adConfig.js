@@ -1,10 +1,15 @@
 module.exports = {
     google: {
-        iframeSelector: `#aswift_0_anchor iframe`,
+        iframeSelector: `.adsbygoogle iframe`,
         prefixList: [
             `https://www.googleadservices.com/pagead/aclk?`,
+            `http://www.googleadservices.com/pagead/aclk?`,
             `https://adclick.g.doubleclick.net/pcs/click?`,
+            `http://adclick.g.doubleclick.net/pcs/click?`,
+            `https://adclick.g.doubleclick.net/aclk?`,
+            `http://adclick.g.doubleclick.net/aclk?`,
             `https://googleads.g.doubleclick.net/aclk?`,
+            `http://googleads.g.doubleclick.net/aclk?`,
             `/aclk?`
         ],
         urlReduce: (url) => {

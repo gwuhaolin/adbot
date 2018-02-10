@@ -16,7 +16,9 @@ new Promise(async (resolve) => {
      * @returns {*} A标签数组
      */
     function allLinkInFrame(iframe, prefixList) {
-        if (iframe) {
+        if (Array.isArray(iframe)) {
+            return [].concat.apply([], iframe.map(em => allLinkInFrame(em, prefixList)));
+        } else if (iframe) {
             const innerDoc = (iframe.contentDocument) ? iframe.contentDocument : iframe.contentWindow.document;
             const urlList = Array.from(innerDoc.querySelectorAll('a')).map(a => a.getAttribute('href')).filter(url => {
                 return prefixList.some(prefix => url && url.startsWith(prefix));
@@ -35,8 +37,8 @@ new Promise(async (resolve) => {
     // 提取广告地址
     const timer = setInterval(async () => {
         try {
-            const iframe = document.querySelector(${JSON.stringify(iframeSelector)});
-            const urlList = allLinkInFrame(iframe, ${JSON.stringify(prefixList)});
+            const iframe = document.querySelectorAll(${JSON.stringify(iframeSelector)});
+            const urlList = allLinkInFrame(Array.from(iframe), ${JSON.stringify(prefixList)});
             if (urlList.length) {
                 clearInterval(timer);
                 resolve(JSON.stringify(urlList));
@@ -91,12 +93,17 @@ async function visitAd(ref, adUrl) {
                 }
                 console.log(`广告页 ${adUrl} 加载完毕`);
                 try {
-                    await Runtime.evaluate({
+                    const res = await Runtime.evaluate({
                         awaitPromise: true,
                         returnByValue: true,
                         expression: playAdJS,
                     });
-                    resolve();
+                    const nextUrl = res.result.value;
+                    if (nextUrl) {
+                        return await visitAd(ref, nextUrl);
+                    } else {
+                        resolve();
+                    }
                 } catch (e) {
                     reject(e);
                 } finally {
@@ -118,8 +125,8 @@ async function getAd(url, proxy) {
         try {
             // 最长执行时间
             setTimeout(() => {
-                reject('TIMEOUT 150S内没执行完');
-            }, 150000);
+                reject('TIMEOUT 200S内没执行完');
+            }, 200 * 1000);
 
             chromePoll = await ChromePool.new({
                 protocols: ['Page', 'Runtime', 'Target'],
@@ -133,9 +140,11 @@ async function getAd(url, proxy) {
             });
             const {protocol} = await chromePoll.require();
             const {Page, Runtime} = protocol;
+            // 导航到广告承载页
             await Page.navigate({
                 url,
             });
+            // 刷新广告承载页
             await new Promise((resolve) => {
                 let refreshCount = 0;
                 Page.domContentEventFired(async () => {
@@ -154,6 +163,7 @@ async function getAd(url, proxy) {
                     }
                 });
             });
+            // 提取广告链接
             await Promise.all(
                 Object.keys(adConfig).map((key) => {
                     return new Promise(async (resolve) => {
@@ -168,6 +178,7 @@ async function getAd(url, proxy) {
                             adUrlList = adUrlList.map(urlReduce);
                         }
                         console.log(`成功获取到 ${key} 的广告地址 ${adUrlList}`);
+                        // 访问广告
                         await visitAd(url, adUrlList);
                         resolve();
                     });
