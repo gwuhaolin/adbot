@@ -27,16 +27,16 @@ module.exports = {
             `https://cpro.baidu.com/cpro/ui/uijs.php?`
         ]
     },
-    jd: {
-        iframeSelector: `iframe[src^='//u-x.jd.com/']`,
-        prefixList: [
-            `//union-click.jd.com/jdc?`
-        ]
-    },
-    sougou: {
-        iframeSelector: `iframe[src^='http://inte.sogou.com/']`,
-        prefixList: [
-            `https://www.googleadservices.com/pagead/aclk?`
-        ]
-    }
+    // jd: {
+    //     iframeSelector: `iframe[src^='//u-x.jd.com/']`,
+    //     prefixList: [
+    //         `//union-click.jd.com/jdc?`
+    //     ]
+    // },
+    // sougou: {
+    //     iframeSelector: `iframe[src^='http://inte.sogou.com/']`,
+    //     prefixList: [
+    //         `https://www.googleadservices.com/pagead/aclk?`
+    //     ]
+    // }
 };
