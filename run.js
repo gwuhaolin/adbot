@@ -125,8 +125,8 @@ async function getAd(url, proxy) {
         try {
             // 最长执行时间
             setTimeout(() => {
-                reject('TIMEOUT 200S内没执行完');
-            }, 200 * 1000);
+                reject('TIMEOUT 500S内没执行完');
+            }, 500 * 1000);
 
             chromePoll = await ChromePool.new({
                 protocols: ['Page', 'Runtime', 'Target'],
