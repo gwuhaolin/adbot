@@ -24,7 +24,9 @@ module.exports = {
         prefixList: [
             `http://click.bes.baidu.com/adx.php?`,
             `http://m.baidu.com/mobads.php?`,
-            `https://cpro.baidu.com/cpro/ui/uijs.php?`
+            `https://cpro.baidu.com/cpro/ui/uijs.php?`,
+            `http://m.baidu.com/mobads.php?`,
+            `https://m.baidu.com/mobads.php?`
         ]
     },
     // jd: {

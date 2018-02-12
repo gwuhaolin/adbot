@@ -129,7 +129,7 @@ async function getAd(url, proxy) {
             }, 200 * 1000);
 
             chromePoll = await ChromePool.new({
-                protocols: ['Page', 'Runtime', 'Target'],
+                protocols: ['Page', 'Runtime', 'Target', 'Network'],
                 chromeRunnerOptions: {
                     chromeFlags: [
                         '--disable-popup-blocking',// 可以弹窗
@@ -139,7 +139,11 @@ async function getAd(url, proxy) {
                 }
             });
             const {protocol} = await chromePoll.require();
-            const {Page, Runtime} = protocol;
+            const {Page, Runtime, Network} = protocol;
+            // 模拟移动端
+            await Network.setUserAgentOverride({
+                userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A356 Safari/604.1'
+            });
             // 导航到广告承载页
             await Page.navigate({
                 url,
